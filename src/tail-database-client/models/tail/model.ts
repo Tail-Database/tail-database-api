@@ -2,7 +2,7 @@ import { DataLayer, InsertResponse, RpcResponse, UpdateResponse } from '../../da
 import { Model } from '../../datalayer/model';
 import { TailRecord } from './record';
 import { TailSerializer } from './serializer';
-import { parseTailRecords } from '../../taildatabase/data_validation';
+import { parseTailRecords } from '../../data_validation';
 
 export class Tail implements Model<TailRecord> {
     private readonly serializer = new TailSerializer();
