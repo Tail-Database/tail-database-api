@@ -70,7 +70,6 @@ export class Coin {
     }
 
     public get_puzzle_and_solution(coin_id: string, height: number): Promise<GetPuzzleAndSolutionResponse> {
-        console.log('height', height);
         return this.request<GetPuzzleAndSolutionResponse>('get_puzzle_and_solution', { coin_id, height });
     }
 

@@ -1,4 +1,5 @@
-import { Bytes, SExp, Stream, sexp_from_stream, h, to_sexp_f } from 'clvm';
+import { Bytes, CLVMType, OPERATOR_LOOKUP, SExp, Stream, run_program, sexp_from_stream, h, to_sexp_f } from 'clvm';
+import { CAT2_MOD, SHA256TREE_MOD } from './puzzles';
 
 export const hex_to_program = (hex: string): SExp => {
   const stream = new Stream(h(hex));
@@ -7,6 +8,9 @@ export const hex_to_program = (hex: string): SExp => {
 
   return sexp_from_stream(stream, to_sexp_f);
 };
+
+export const COIN_CREATE_CONDITION = 51;
+export const MAGIC_SPEND = -113;
 
 const ATOM_MATCH = hex_to_program('24');
 const SEXP_MATCH = hex_to_program('3a');
@@ -130,4 +134,28 @@ export const uncurry = (puzzle: SExp): [string, string[]] | null => {
   }
 
   return null;
+};
+
+export const hash_program = (program: CLVMType): string => {
+    const [, result] = run_program(
+        hex_to_program(SHA256TREE_MOD),
+        SExp.to([program]),
+        OPERATOR_LOOKUP,
+    );
+
+    return result.atom.hex();
+};
+
+export const match_cat_puzzle = (puzzle: SExp) => {
+    const result = uncurry(puzzle);
+
+    if (!result) {
+        return null;
+    }
+
+    if (result[0] === CAT2_MOD) {
+        return result[1];
+    }
+
+    return null;
 };

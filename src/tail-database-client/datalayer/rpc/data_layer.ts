@@ -85,7 +85,6 @@ export class DataLayer {
     }
 
     private async request<T>(route: string, body: Record<string, any>): Promise<T> {
-        console.log('axios ', axios);
         const { data } = await axios.post<T>(`https://${this.options.hostname || DEFAULT_HOSTNAME}:${this.options.port || DEFAULT_PORT}/${route}`, body, {
             httpsAgent: this.agent,
         });
