@@ -1,5 +1,5 @@
 import { IsDefined, IsIn, Length, IsString, MaxLength, IsUppercase, NotContains, NotEquals, Matches, IsOptional } from 'class-validator';
-import { CATEGORIES } from 'src/tail-database-client';
+import { CATEGORIES } from '@tail-database/tail-database-client';
 
 export class AddTailDto {
   @Length(64, 64)

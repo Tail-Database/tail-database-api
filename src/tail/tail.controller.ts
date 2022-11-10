@@ -1,5 +1,5 @@
 import { Body, Controller, Get, Param } from '@nestjs/common';
-import { InsertResponse, TailRecord } from '../tail-database-client';
+import { InsertResponse, TailRecord } from '@tail-database/tail-database-client';
 import { AddTailDto } from './add.tail.dto';
 import { TailService } from './tail.service';
 

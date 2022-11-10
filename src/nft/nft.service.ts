@@ -1,9 +1,6 @@
 import { SExp } from 'clvm';
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { coin_name } from '../tail-database-client/coin/coin_name';
-import { Coin } from '../tail-database-client/coin/rpc/coin';
-import { hex_to_program, uncurry } from '../tail-database-client/clvm';
-import { NFT_STATE_LAYER_MOD, SINGLETON_MOD } from '../tail-database-client';
+import { Coin, NFT_STATE_LAYER_MOD, SINGLETON_MOD, coin_name, hex_to_program, uncurry } from '@tail-database/tail-database-client';
 
 @Injectable()
 export class NftService {

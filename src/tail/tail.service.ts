@@ -1,10 +1,18 @@
 import { OPERATOR_LOOKUP, run_program, SExp } from 'clvm';
 import { go, setPrintFunction } from 'clvm_tools';
 import { Injectable } from '@nestjs/common';
-import { coin_name } from 'src/tail-database-client/coin/coin_name';
-import { Coin } from 'src/tail-database-client/coin/rpc/coin';
-import { hex_to_program, InsertResponse, Tail, TailRecord } from '../tail-database-client';
-import { COIN_CREATE_CONDITION, hash_program, MAGIC_SPEND, match_cat_puzzle } from 'src/tail-database-client/clvm';
+import {
+    Coin,
+    InsertResponse,
+    Tail,
+    TailRecord,
+    coin_name,
+    hash_program,
+    hex_to_program,
+    match_cat_puzzle,
+    COIN_CREATE_CONDITION,
+    MAGIC_SPEND
+} from '@tail-database/tail-database-client';
 
 @Injectable()
 export class TailService {

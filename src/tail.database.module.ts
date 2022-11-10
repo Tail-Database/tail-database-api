@@ -1,10 +1,8 @@
 import { Module } from '@nestjs/common';
+import { Coin, DataLayer, Tail } from '@tail-database/tail-database-client';
 import { connectionOptions } from './config/rpc.config';
 import { NftController } from './nft/nft.controller';
 import { NftService } from './nft/nft.service';
-import { Coin } from './tail-database-client/coin/rpc/coin';
-import { DataLayer } from './tail-database-client/datalayer/rpc/data_layer';
-import { Tail } from './tail-database-client/models/tail/model';
 import { TailController } from './tail/tail.controller';
 import { TailService } from './tail/tail.service';
 
