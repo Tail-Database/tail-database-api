@@ -4,6 +4,7 @@ import { AddTailDto } from './add.tail.dto';
 import { TailService } from './tail.service';
 
 interface TailRevealResponse {
+    eve_coin_id: string;
     tail_hash: string;
     tail_reveal: string;
 }
@@ -29,9 +30,10 @@ export class TailController {
 
   @Get('/reveal/:eveCoinId')
   async getTailReveal(@Param('eveCoinId') eveCoinId: string): Promise<TailRevealResponse> {
-    const [_, tail_hash, tail_reveal] = await this.tailService.getTailReveal(eveCoinId);
+    const [eve_coin_id, tail_hash, tail_reveal] = await this.tailService.getTailReveal(eveCoinId);
 
     return {
+        eve_coin_id,
         tail_hash,
         tail_reveal
     };
