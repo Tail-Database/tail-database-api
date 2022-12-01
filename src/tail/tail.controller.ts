@@ -1,6 +1,7 @@
-import { Body, Controller, Get, Param } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post } from '@nestjs/common';
 import { InsertResponse, TailRecord } from '@tail-database/tail-database-client';
 import { AddTailDto } from './add.tail.dto';
+import { AddTailsDto } from './add.tails.dto';
 import { TailService } from './tail.service';
 
 interface TailRevealResponse {
@@ -23,9 +24,14 @@ export class TailController {
     return this.tailService.getTail(hash);
   }
 
-  @Get()
+  @Post()
   async addTail(@Body() addTailDto: AddTailDto): Promise<InsertResponse> {
     return this.tailService.addTail(addTailDto);
+  }
+
+  @Post('/batch/insert')
+  async addTails(@Body() addTailsDto: AddTailsDto): Promise<InsertResponse> {
+    return this.tailService.addTails(addTailsDto.tails);
   }
 
   @Get('/reveal/:eveCoinId')

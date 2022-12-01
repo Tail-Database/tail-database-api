@@ -1,6 +1,6 @@
 import { OPERATOR_LOOKUP, run_program, SExp } from 'clvm';
 import { go, setPrintFunction } from 'clvm_tools';
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import {
     Coin,
     InsertResponse,
@@ -28,6 +28,24 @@ export class TailService {
 
     async addTail(tailRecord: TailRecord): Promise<InsertResponse> {
         return this.tail.insert(tailRecord);
+    }
+
+    async addTails(tailRecords: TailRecord[]): Promise<InsertResponse> {
+        const hashes = new Map<string, boolean>();
+        const codes = new Map<string, boolean>();
+
+        for (const tailRecord of tailRecords) {
+            if (hashes.get(tailRecord.hash)) {
+                throw new BadRequestException('Duplicate hash in batch insert');
+            }
+            if (codes.get(tailRecord.code)) {
+                throw new BadRequestException('Duplicate hash in batch insert');
+            }
+            hashes.set(tailRecord.hash, true);
+            codes.set(tailRecord.code, true);
+        }
+
+        return this.tail.batch_insert(tailRecords);
     }
 
     async getTailReveal(eveCoinId: string): Promise<[string, string, string]> {
