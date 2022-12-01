@@ -8,7 +8,7 @@ import { TailService } from './tail/tail.service';
 
 const datalayer = new DataLayer({
     ...connectionOptions,
-    // Temporarily hacking in testnet10 store id
+    // Temporarily hacking in mainnet store id
     id: 'fd1078bf0d01743e8e685b72635ca15488f5adce0da016b229f8885a3de36c0f',
 })
 const coin = new Coin(connectionOptions);
