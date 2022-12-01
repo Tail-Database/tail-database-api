@@ -9,7 +9,7 @@ import { TailService } from './tail/tail.service';
 const datalayer = new DataLayer({
     ...connectionOptions,
     // Temporarily hacking in testnet10 store id
-    id: '073edb36a4a982c3d00999b1d925d304e7867afa68eb535e3071ee2f682700ea',
+    id: 'fd1078bf0d01743e8e685b72635ca15488f5adce0da016b229f8885a3de36c0f',
 })
 const coin = new Coin(connectionOptions);
 const tail = new Tail(datalayer);
