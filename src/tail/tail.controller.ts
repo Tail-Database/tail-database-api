@@ -1,18 +1,19 @@
-import { Body, Controller, Get, Param, Post } from '@nestjs/common';
-import { InsertResponse, TailRecord } from '@tail-database/tail-database-client';
+import { BadRequestException, Body, Controller, Get, Param, Post } from '@nestjs/common';
+import { InsertResponse, TailRecord, validateTailRecord } from '@tail-database/tail-database-client';
 import { AddTailDto } from './add.tail.dto';
 import { AddTailsDto } from './add.tails.dto';
 import { TailService } from './tail.service';
+import { NftService } from '../nft/nft.service';
 
 interface TailRevealResponse {
-    eve_coin_id: string;
-    tail_hash: string;
-    tail_reveal: string;
+  eve_coin_id: string;
+  tail_hash: string;
+  tail_reveal: string;
 }
 
 @Controller('tail')
 export class TailController {
-  constructor(private readonly tailService: TailService) {}
+  constructor(private readonly tailService: TailService, private readonly nftService: NftService) { }
 
   @Get()
   async getTails(): Promise<TailRecord[]> {
@@ -26,6 +27,24 @@ export class TailController {
 
   @Post()
   async addTail(@Body() addTailDto: AddTailDto): Promise<InsertResponse> {
+    try {
+      validateTailRecord(addTailDto);
+    } catch (err) {
+      throw new BadRequestException(err.message);
+    }
+
+    const [_, tail_hash] = await this.tailService.getTailReveal(addTailDto.eveCoinId);
+
+    if (tail_hash !== addTailDto.hash) {
+      throw new BadRequestException(`eveCoinId is not for correct CAT. Expected TAIL hash of ${addTailDto.hash} but found ${tail_hash}`);
+    }
+
+    const nftUri = await this.nftService.getNftUri(addTailDto.launcherId);
+
+    if (!nftUri) {
+      throw new BadRequestException('Launcher ID does not resolve to an NFT URI');
+    }
+
     return this.tailService.addTail(addTailDto);
   }
 
@@ -39,9 +58,9 @@ export class TailController {
     const [eve_coin_id, tail_hash, tail_reveal] = await this.tailService.getTailReveal(eveCoinId);
 
     return {
-        eve_coin_id,
-        tail_hash,
-        tail_reveal
+      eve_coin_id,
+      tail_hash,
+      tail_reveal
     };
   }
 }
