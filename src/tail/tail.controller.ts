@@ -27,29 +27,17 @@ export class TailController {
 
   @Post()
   async addTail(@Body() addTailDto: AddTailDto): Promise<InsertResponse> {
-    try {
-      validateTailRecord(addTailDto);
-    } catch (err) {
-      throw new BadRequestException(err.message);
-    }
-
-    const [_, tail_hash] = await this.tailService.getTailReveal(addTailDto.eveCoinId);
-
-    if (tail_hash !== addTailDto.hash) {
-      throw new BadRequestException(`eveCoinId is not for correct CAT. Expected TAIL hash of ${addTailDto.hash} but found ${tail_hash}`);
-    }
-
-    const nftUri = await this.nftService.getNftUri(addTailDto.launcherId);
-
-    if (!nftUri) {
-      throw new BadRequestException('Launcher ID does not resolve to an NFT URI');
-    }
+    await this.validateTailRecord(addTailDto);
 
     return this.tailService.addTail(addTailDto);
   }
 
   @Post('/batch/insert')
   async addTails(@Body() addTailsDto: AddTailsDto): Promise<InsertResponse> {
+    for (const tailRecord of addTailsDto.tails) {
+      await this.validateTailRecord(tailRecord);
+    }
+
     return this.tailService.addTails(addTailsDto.tails);
   }
 
@@ -62,5 +50,25 @@ export class TailController {
       tail_hash,
       tail_reveal
     };
+  }
+
+  private async validateTailRecord(tailRecord: TailRecord) {
+    try {
+      validateTailRecord(tailRecord);
+    } catch (err) {
+      throw new BadRequestException(err.message);
+    }
+
+    const [_, tail_hash] = await this.tailService.getTailReveal(tailRecord.eveCoinId);
+
+    if (tail_hash !== tailRecord.hash) {
+      throw new BadRequestException(`eveCoinId is not for correct CAT. Expected TAIL hash of ${tailRecord.hash} but found ${tail_hash}`);
+    }
+
+    const nftUri = await this.nftService.getNftUri(tailRecord.launcherId);
+
+    if (!nftUri) {
+      throw new BadRequestException('Launcher ID does not resolve to an NFT URI');
+    }
   }
 }
