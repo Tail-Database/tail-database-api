@@ -37,6 +37,8 @@ export class TailController {
 
     await this.validateTailRecord(addTailDto);
 
+    this.logger.log('Validation passed');
+
     return this.tailService.addTail(addTailDto);
   }
 
