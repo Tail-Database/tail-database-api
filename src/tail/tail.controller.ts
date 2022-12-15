@@ -35,11 +35,14 @@ export class TailController {
   async addTail(@Body() addTailDto: AddTailDto): Promise<InsertResponse> {
     this.logger.log('POST /tail called');
 
-    await this.validateTailRecord(addTailDto);
+    const eveCoinId = await this.validateTailRecord(addTailDto);
 
     this.logger.log('Validation passed');
 
-    return this.tailService.addTail(addTailDto);
+    return this.tailService.addTail({
+      ...addTailDto,
+      eveCoinId
+    });
   }
 
   @Post('/batch/insert')
@@ -73,7 +76,7 @@ export class TailController {
       throw new BadRequestException(err.message);
     }
 
-    const [_, tail_hash] = await this.tailService.getTailReveal(tailRecord.eveCoinId);
+    const [eve_coin_id, tail_hash] = await this.tailService.getTailReveal(tailRecord.eveCoinId);
 
     if (tail_hash !== tailRecord.hash) {
       throw new BadRequestException(`eveCoinId is not for correct CAT. Expected TAIL hash of ${tailRecord.hash} but found ${tail_hash}`);
@@ -84,5 +87,7 @@ export class TailController {
     if (!nftUri) {
       throw new BadRequestException('Launcher ID does not resolve to an NFT URI');
     }
+
+    return eve_coin_id;
   }
 }
