@@ -1,0 +1,10 @@
+version: "3"
+
+services:
+  tail-database-api:
+    build: .
+    container_name: tail-database-api
+    restart: always
+    volumes:
+      - ${HOME}/.chia/mainnet/config/ssl/full_node:/root/.chia/mainnet/config/ssl/full_node
+    network_mode: host
