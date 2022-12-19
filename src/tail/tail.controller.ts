@@ -1,12 +1,14 @@
-import { BadRequestException, Body, Controller, Get, Param, Post, Logger } from '@nestjs/common';
+import { BadRequestException, Body, Controller, Get, Headers, Param, Post, Logger, Patch } from '@nestjs/common';
 import { InsertResponse, TailRecord, validateTailRecord } from '@tail-database/tail-database-client';
 import { AddTailDto } from './add.tail.dto';
 import { AddTailsDto } from './add.tails.dto';
 import { TailService } from './tail.service';
 import { NftService } from '../nft/nft.service';
+import { Bls } from 'src/bls';
 
 interface TailRevealResponse {
   eve_coin_id: string;
+  eve_puzzle_hash: string;
   tail_hash: string;
   tail_reveal: string;
 }
@@ -15,7 +17,11 @@ interface TailRevealResponse {
 export class TailController {
   private readonly logger = new Logger(TailController.name);
 
-  constructor(private readonly tailService: TailService, private readonly nftService: NftService) { }
+  constructor(
+    private readonly tailService: TailService,
+    private readonly nftService: NftService,
+    private readonly bls: Bls,
+  ) { }
 
   @Get()
   async getTails(): Promise<TailRecord[]> {
@@ -45,6 +51,19 @@ export class TailController {
     });
   }
 
+  @Patch()
+  async updateTail(@Headers() headers, @Body() updateTailDto: AddTailDto): Promise<void> {
+    this.logger.log('PATCH /tail called');
+
+    const valid = await this.tailService.authorize(updateTailDto.hash, headers['X-Chia-Signature']);
+
+    if (!valid) {
+      throw new BadRequestException('Invalid signature');
+    }
+
+    // Todo: perform update
+  }
+
   @Post('/batch/insert')
   async addTails(@Body() addTailsDto: AddTailsDto): Promise<InsertResponse> {
     this.logger.log('POST /batch/insert called');
@@ -60,10 +79,11 @@ export class TailController {
   async getTailReveal(@Param('eveCoinId') eveCoinId: string): Promise<TailRevealResponse> {
     this.logger.log(`GET /reveal/${eveCoinId} called`);
 
-    const [eve_coin_id, tail_hash, tail_reveal] = await this.tailService.getTailReveal(eveCoinId);
+    const [eve_coin_id, eve_puzzle_hash, tail_hash, tail_reveal] = await this.tailService.getTailReveal(eveCoinId);
 
     return {
       eve_coin_id,
+      eve_puzzle_hash,
       tail_hash,
       tail_reveal
     };
@@ -76,7 +96,7 @@ export class TailController {
       throw new BadRequestException(err.message);
     }
 
-    const [eve_coin_id, tail_hash] = await this.tailService.getTailReveal(tailRecord.eveCoinId);
+    const [eve_coin_id, _, tail_hash] = await this.tailService.getTailReveal(tailRecord.eveCoinId);
 
     if (tail_hash !== tailRecord.hash) {
       throw new BadRequestException(`eveCoinId is not for correct CAT. Expected TAIL hash of ${tailRecord.hash} but found ${tail_hash}`);

@@ -1,10 +1,17 @@
+import loadBls from '@chiamine/bls-signatures';
 import { Module } from '@nestjs/common';
 import { Coin, DataLayer, Tail } from '@tail-database/tail-database-client';
+import { Bls } from './bls';
 import { connectionOptions } from './config/rpc.config';
 import { NftController } from './nft/nft.controller';
 import { NftService } from './nft/nft.service';
 import { TailController } from './tail/tail.controller';
 import { TailService } from './tail/tail.service';
+
+const bls = {
+    provide: 'BLS',
+    useFactory: async () => loadBls(),
+  };
 
 const datalayer = new DataLayer({
     ...connectionOptions,
@@ -23,7 +30,7 @@ const tail = new Tail(datalayer);
     }, {
         provide: Tail,
         useValue: tail
-    }, TailService, NftService],
+    }, TailService, NftService, Bls, bls],
     exports: [Tail],
 })
 export class TailDatabaseModule { }

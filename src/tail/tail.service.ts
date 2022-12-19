@@ -13,10 +13,12 @@ import {
     COIN_CREATE_CONDITION,
     MAGIC_SPEND
 } from '@tail-database/tail-database-client';
+import { getCurrentHour, sha256 } from 'src/util';
+import { Bls } from 'src/bls';
 
 @Injectable()
 export class TailService {
-    constructor(private readonly coin: Coin, private readonly tail: Tail) { }
+    constructor(private readonly coin: Coin, private readonly tail: Tail, private readonly bls: Bls) { }
 
     async getTails(): Promise<TailRecord[]> {
         return this.tail.all();
@@ -46,6 +48,29 @@ export class TailService {
         }
 
         return this.tail.batch_insert(tailRecords);
+    }
+
+    async getTailEveCoinAddress(hash: string): Promise<string> {
+        const tail = await this.tail.get(hash);
+        const eve_coin = await this.coin.get_coin_record_by_name(tail.eveCoinId);
+
+        return eve_coin.coin_record.coin.puzzle_hash;
+    }
+
+    public async authorize(hash: string, request_signature: string): Promise<boolean> {
+        const auth_message = this.getAuthorizationMessage();
+        const signature = this.bls.signatureFromHex(request_signature);
+
+        const eve_coin_address = await this.getTailEveCoinAddress(hash);
+
+        // Todo: get public key of address by looking at the spent eve coin
+        const public_key = 1;
+
+        return this.bls.verify(public_key, auth_message, signature)
+    }
+
+    private getAuthorizationMessage(): string {
+        return sha256(getCurrentHour().toISOString());
     }
 
     async getTailReveal(eveCoinId: string): Promise<[string, string, string]> {
