@@ -10,6 +10,7 @@ import {
     hash_program,
     hex_to_program,
     match_cat_puzzle,
+    AGG_SIG_ME,
     COIN_CREATE_CONDITION,
     MAGIC_SPEND
 } from '@tail-database/tail-database-client';
@@ -61,19 +62,35 @@ export class TailService {
         const auth_message = this.getAuthorizationMessage();
         const signature = this.bls.signatureFromHex(request_signature);
 
-        const eve_coin_address = await this.getTailEveCoinAddress(hash);
+        const [eve_coin_id, eve_coin_spent_block_index] = await this.getTailReveal(hash);
+        const { coin_solution } = await this.coin.get_puzzle_and_solution(eve_coin_id, eve_coin_spent_block_index)
 
-        // Todo: get public key of address by looking at the spent eve coin
-        const public_key = 1;
+        const [, result] = run_program(
+            hex_to_program(coin_solution.puzzle_reveal),
+            hex_to_program(coin_solution.solution),
+            OPERATOR_LOOKUP,
+        );
 
-        return this.bls.verify(public_key, auth_message, signature)
+        for (const data of result.as_iter()) {
+            const opcode = (data as SExp).first();
+
+            if (opcode.as_int() == AGG_SIG_ME) {
+                const synthetic_pk_sexp: SExp = data.rest().first();
+                const synthetic_pk_hex = synthetic_pk_sexp.as_javascript().toString();
+                const synthetic_pk = this.bls.getPublicKey(synthetic_pk_hex);
+
+                return this.bls.verify(synthetic_pk, auth_message, signature)
+            }
+        }
+
+        return false;
     }
 
     private getAuthorizationMessage(): string {
         return sha256(getCurrentHour().toISOString());
     }
 
-    async getTailReveal(eveCoinId: string): Promise<[string, string, string]> {
+    async getTailReveal(eveCoinId: string): Promise<[string, number, string, string]> {
         let current_coin = eveCoinId;
 
         while (true) {
@@ -139,7 +156,7 @@ export class TailService {
                                             go('opd', tail.toString());
                                         });
 
-                                        return [child_coin_name.slice(2), hashed_tail_reveal, tail_reveal];
+                                        return [child_coin_name.slice(2), child.spent_block_index, hashed_tail_reveal, tail_reveal];
                                     }
                                 }
                             }

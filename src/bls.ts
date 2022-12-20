@@ -14,6 +14,10 @@ export class Bls {
         return G2Element.from_bytes(hex_to_buffer(hex));
     }
 
+    public getPublicKey(hex: string): G1Element {
+        return this.BLS.G1Element.from_bytes(hex_to_buffer(hex));
+    }
+
     public verify(
         public_key: G1Element,
         message: string,

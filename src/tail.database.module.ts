@@ -11,7 +11,7 @@ import { TailService } from './tail/tail.service';
 const bls = {
     provide: 'BLS',
     useFactory: async () => loadBls(),
-  };
+};
 
 const datalayer = new DataLayer({
     ...connectionOptions,

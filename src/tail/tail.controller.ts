@@ -8,7 +8,7 @@ import { Bls } from 'src/bls';
 
 interface TailRevealResponse {
   eve_coin_id: string;
-  eve_puzzle_hash: string;
+  eve_coin_spent_block_index: number;
   tail_hash: string;
   tail_reveal: string;
 }
@@ -79,11 +79,11 @@ export class TailController {
   async getTailReveal(@Param('eveCoinId') eveCoinId: string): Promise<TailRevealResponse> {
     this.logger.log(`GET /reveal/${eveCoinId} called`);
 
-    const [eve_coin_id, eve_puzzle_hash, tail_hash, tail_reveal] = await this.tailService.getTailReveal(eveCoinId);
+    const [eve_coin_id, eve_coin_spent_block_index, tail_hash, tail_reveal] = await this.tailService.getTailReveal(eveCoinId);
 
     return {
       eve_coin_id,
-      eve_puzzle_hash,
+      eve_coin_spent_block_index,
       tail_hash,
       tail_reveal
     };
