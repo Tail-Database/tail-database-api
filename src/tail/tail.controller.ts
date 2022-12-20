@@ -55,7 +55,13 @@ export class TailController {
   async updateTail(@Headers() headers, @Body() updateTailDto: AddTailDto): Promise<void> {
     this.logger.log('PATCH /tail called');
 
-    const valid = await this.tailService.authorize(updateTailDto.hash, headers['X-Chia-Signature']);
+    const signature = headers['x-chia-signature'];
+
+    if (!signature) {
+      throw new BadRequestException('Signature is required');
+    }
+
+    const valid = await this.tailService.authorize(updateTailDto.hash, signature);
 
     if (!valid) {
       throw new BadRequestException('Invalid signature');

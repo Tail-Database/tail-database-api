@@ -11,7 +11,7 @@ export class Bls {
     constructor(@Inject('BLS') private readonly BLS: ModuleInstance) { }
 
     public signatureFromHex(hex: string): G2Element {
-        return G2Element.from_bytes(hex_to_buffer(hex));
+        return this.BLS.G2Element.from_bytes(hex_to_buffer(hex));
     }
 
     public getPublicKey(hex: string): G1Element {

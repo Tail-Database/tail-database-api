@@ -31,6 +31,6 @@ const tail = new Tail(datalayer);
         provide: Tail,
         useValue: tail
     }, TailService, NftService, Bls, bls],
-    exports: [Tail],
+    exports: [],
 })
 export class TailDatabaseModule { }

@@ -61,9 +61,11 @@ export class TailService {
     public async authorize(hash: string, request_signature: string): Promise<boolean> {
         const auth_message = this.getAuthorizationMessage();
         const signature = this.bls.signatureFromHex(request_signature);
+        const tail = await this.tail.get(hash);
+        const eve_coin = await this.coin.get_coin_record_by_name(tail.eveCoinId);
 
-        const [eve_coin_id, eve_coin_spent_block_index] = await this.getTailReveal(hash);
-        const { coin_solution } = await this.coin.get_puzzle_and_solution(eve_coin_id, eve_coin_spent_block_index)
+        // Puzzle and solution of the parent of eve coin
+        const { coin_solution } = await this.coin.get_puzzle_and_solution(eve_coin.coin_record.coin.parent_coin_info, eve_coin.coin_record.confirmed_block_index);
 
         const [, result] = run_program(
             hex_to_program(coin_solution.puzzle_reveal),
@@ -76,9 +78,10 @@ export class TailService {
 
             if (opcode.as_int() == AGG_SIG_ME) {
                 const synthetic_pk_sexp: SExp = data.rest().first();
-                const synthetic_pk_hex = synthetic_pk_sexp.as_javascript().toString();
+                const synthetic_pk_hex = synthetic_pk_sexp.atom.hex();
                 const synthetic_pk = this.bls.getPublicKey(synthetic_pk_hex);
 
+                // Verify signature against key of parent of eve
                 return this.bls.verify(synthetic_pk, auth_message, signature)
             }
         }
