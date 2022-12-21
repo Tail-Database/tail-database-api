@@ -1,6 +1,8 @@
 import loadBls from '@chiamine/bls-signatures';
 import { Module } from '@nestjs/common';
 import { Coin, DataLayer, Tail } from '@tail-database/tail-database-client';
+import { AuthController } from './auth/auth.controller';
+import { AuthService } from './auth/auth.service';
 import { Bls } from './bls';
 import { connectionOptions } from './config/rpc.config';
 import { NftController } from './nft/nft.controller';
@@ -23,14 +25,25 @@ const tail = new Tail(datalayer);
 
 @Module({
     imports: [],
-    controllers: [TailController, NftController],
-    providers: [{
-        provide: Coin,
-        useValue: coin
-    }, {
-        provide: Tail,
-        useValue: tail
-    }, TailService, NftService, Bls, bls],
+    controllers: [
+        AuthController,
+        TailController,
+        NftController,
+    ],
+    providers: [
+        {
+            provide: Coin,
+            useValue: coin
+        }, {
+            provide: Tail,
+            useValue: tail
+        },
+        AuthService,
+        TailService,
+        NftService,
+        Bls,
+        bls
+    ],
     exports: [],
 })
 export class TailDatabaseModule { }

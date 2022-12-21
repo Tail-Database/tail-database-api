@@ -14,12 +14,12 @@ import {
     COIN_CREATE_CONDITION,
     MAGIC_SPEND
 } from '@tail-database/tail-database-client';
-import { getCurrentHour, sha256 } from 'src/util';
 import { Bls } from 'src/bls';
+import { AuthService } from 'src/auth/auth.service';
 
 @Injectable()
 export class TailService {
-    constructor(private readonly coin: Coin, private readonly tail: Tail, private readonly bls: Bls) { }
+    constructor(private readonly coin: Coin, private readonly tail: Tail, private readonly bls: Bls, private readonly authService: AuthService) { }
 
     async getTails(): Promise<TailRecord[]> {
         return this.tail.all();
@@ -58,8 +58,15 @@ export class TailService {
         return eve_coin.coin_record.coin.puzzle_hash;
     }
 
+    public async getEveCoinParentAddress(hash: string): Promise<string> {
+        const tail = await this.tail.get(hash);
+        const eve_coin = await this.coin.get_coin_record_by_name(tail.eveCoinId);
+
+        return eve_coin.coin_record.coin.parent_coin_info;
+    }
+
     public async authorize(hash: string, request_signature: string): Promise<boolean> {
-        const auth_message = this.getAuthorizationMessage();
+        const auth_message = this.authService.getAuthorizationMessage();
         const signature = this.bls.signatureFromHex(request_signature);
         const tail = await this.tail.get(hash);
         const eve_coin = await this.coin.get_coin_record_by_name(tail.eveCoinId);
@@ -87,10 +94,6 @@ export class TailService {
         }
 
         return false;
-    }
-
-    private getAuthorizationMessage(): string {
-        return sha256(getCurrentHour().toISOString());
     }
 
     async getTailReveal(eveCoinId: string): Promise<[string, number, string, string]> {

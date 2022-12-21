@@ -4,7 +4,6 @@ import { AddTailDto } from './add.tail.dto';
 import { AddTailsDto } from './add.tails.dto';
 import { TailService } from './tail.service';
 import { NftService } from '../nft/nft.service';
-import { Bls } from 'src/bls';
 
 interface TailRevealResponse {
   eve_coin_id: string;
@@ -20,7 +19,6 @@ export class TailController {
   constructor(
     private readonly tailService: TailService,
     private readonly nftService: NftService,
-    private readonly bls: Bls,
   ) { }
 
   @Get()
