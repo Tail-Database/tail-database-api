@@ -58,11 +58,11 @@ export class TailService {
         return eve_coin.coin_record.coin.puzzle_hash;
     }
 
-    public async getEveCoinParentAddress(hash: string): Promise<string> {
-        const tail = await this.tail.get(hash);
-        const eve_coin = await this.coin.get_coin_record_by_name(tail.eveCoinId);
+    public async getParentPuzzleHash(coinId: string): Promise<string> {
+        const eve_coin = await this.coin.get_coin_record_by_name(coinId);
+        const eve_coin_parent = await this.coin.get_coin_record_by_name(eve_coin.coin_record.coin.parent_coin_info);
 
-        return eve_coin.coin_record.coin.parent_coin_info;
+        return eve_coin_parent.coin_record.coin.puzzle_hash;
     }
 
     public async authorize(hash: string, request_signature: string): Promise<boolean> {

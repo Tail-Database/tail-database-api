@@ -1,6 +1,7 @@
-import { Controller, Get, Logger, Param } from '@nestjs/common';
+import { Body, Controller, Get, Logger, Param } from '@nestjs/common';
 import { convertbits, encode } from 'src/bech32';
 import { TailService } from '../tail/tail.service';
+import { AuthDto } from './auth.dto';
 import { AuthService } from './auth.service';
 
 @Controller('auth')
@@ -13,15 +14,15 @@ export class AuthController {
   ) { }
 
   @Get(':hash')
-  async getMessage(@Param('hash') hash: string): Promise<{ address: string; message: string; }> {
+  async getMessage(@Param('hash') hash: string, @Body() authDto: AuthDto): Promise<{ address: string; message: string; }> {
     this.logger.log('GET /auth called');
 
     const message = this.authService.getAuthorizationMessage();
-    const puzzle_hash = await this.tailService.getEveCoinParentAddress(hash);
-    const puzzlehashBuffer = Buffer.from(puzzle_hash.slice(2), 'hex');
-    const puzzlehashArray = Array.prototype.slice.call(puzzlehashBuffer, 0);
-    const data = convertbits(puzzlehashArray, 8, 5);
-    const address = encode('xch', data, 'bech32m');
+    const [eve_coin_id] = await this.tailService.getTailReveal(authDto.coinId);
+    const eve_coin_parent_puzzle_hash = await this.tailService.getParentPuzzleHash(eve_coin_id);
+    const eve_coin_parent_puzzle_hash_buffer = Buffer.from(eve_coin_parent_puzzle_hash.slice(2), 'hex');
+    const eve_coin_parent_puzzle_hash_array = Array.prototype.slice.call(eve_coin_parent_puzzle_hash_buffer, 0);
+    const address = encode('xch', convertbits(eve_coin_parent_puzzle_hash_array, 8, 5), 'bech32m');
 
     return {
         address,
