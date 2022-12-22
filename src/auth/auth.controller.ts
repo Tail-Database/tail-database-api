@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Logger, Param } from '@nestjs/common';
+import { Body, Controller, Logger, Param, Post } from '@nestjs/common';
 import { convertbits, encode } from 'src/bech32';
 import { TailService } from '../tail/tail.service';
 import { AuthDto } from './auth.dto';
@@ -13,9 +13,11 @@ export class AuthController {
     private readonly tailService: TailService,
   ) { }
 
-  @Get(':hash')
+  @Post(':hash')
   async getMessage(@Param('hash') hash: string, @Body() authDto: AuthDto): Promise<{ address: string; message: string; }> {
     this.logger.log('GET /auth called');
+
+    await this.tailService.validateTailHash(hash, authDto.coinId);
 
     const message = this.authService.getAuthorizationMessage();
     const [eve_coin_id] = await this.tailService.getTailReveal(authDto.coinId);

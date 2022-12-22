@@ -77,7 +77,7 @@ export class TailService {
         }
 
         // Eve coin must be of the correct CAT
-        this.validateTailHash(hash, eveCoinId);
+        await this.validateTailHash(hash, eveCoinId);
 
         const auth_message = SExp.to("Chia Signed Message").cons(this.authService.getAuthorizationMessage());
 
