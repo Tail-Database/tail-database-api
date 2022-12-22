@@ -72,6 +72,10 @@ export class TailService {
     }
 
     public async authorize(hash: string, eveCoinId: string, request_signature: string): Promise<boolean> {
+        if (!request_signature) {
+            throw new BadRequestException('Signature is required');
+        }
+
         // Eve coin must be of the correct CAT
         this.validateTailHash(hash, eveCoinId);
 
@@ -105,11 +109,15 @@ export class TailService {
                 const synthetic_pk = this.bls.getPublicKey(synthetic_pk_hex);
 
                 // Verify signature against key of parent of eve
-                return this.bls.verify(synthetic_pk, message, signature)
+                const valid = this.bls.verify(synthetic_pk, message, signature);
+
+                if (valid) {
+                    return;
+                }
             }
         }
 
-        return false;
+        throw new BadRequestException('Invalid signature');
     }
 
     async getTailReveal(eveCoinId: string): Promise<[string, number, string, string]> {

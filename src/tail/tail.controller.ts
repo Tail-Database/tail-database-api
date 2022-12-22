@@ -36,8 +36,10 @@ export class TailController {
   }
 
   @Post()
-  async addTail(@Body() addTailDto: AddTailDto): Promise<InsertResponse> {
+  async addTail(@Headers() headers, @Body() addTailDto: AddTailDto): Promise<InsertResponse> {
     this.logger.log('POST /tail called');
+
+    // await this.tailService.authorize(addTailDto.hash, addTailDto.eveCoinId, headers['x-chia-signature']);
 
     const eveCoinId = await this.validateTailRecord(addTailDto);
 
@@ -53,26 +55,18 @@ export class TailController {
   async updateTail(@Headers() headers, @Body() updateTailDto: AddTailDto): Promise<void> {
     this.logger.log('PATCH /tail called');
 
-    const signature = headers['x-chia-signature'];
-
-    if (!signature) {
-      throw new BadRequestException('Signature is required');
-    }
-
-    const valid = await this.tailService.authorize(updateTailDto.hash, updateTailDto.eveCoinId, signature);
-
-    if (!valid) {
-      throw new BadRequestException('Invalid signature');
-    }
+    await this.tailService.authorize(updateTailDto.hash, updateTailDto.eveCoinId, headers['x-chia-signature']);
 
     // Todo: perform update
   }
 
   @Post('/batch/insert')
-  async addTails(@Body() addTailsDto: AddTailsDto): Promise<InsertResponse> {
+  async addTails(@Headers() headers, @Body() addTailsDto: AddTailsDto): Promise<InsertResponse> {
     this.logger.log('POST /batch/insert called');
 
     for (const tailRecord of addTailsDto.tails) {
+      await this.tailService.authorize(tailRecord.hash, tailRecord.eveCoinId, headers['x-chia-signature']);
+
       await this.validateTailRecord(tailRecord);
     }
 
