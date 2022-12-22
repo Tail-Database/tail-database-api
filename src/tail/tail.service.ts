@@ -1,4 +1,4 @@
-import { OPERATOR_LOOKUP, run_program, SExp } from 'clvm';
+import { h, OPERATOR_LOOKUP, run_program, SExp, sexp_from_stream, Stream, to_sexp_f } from 'clvm';
 import { go, setPrintFunction } from 'clvm_tools';
 import { BadRequestException, Injectable } from '@nestjs/common';
 import {
@@ -16,6 +16,12 @@ import {
 } from '@tail-database/tail-database-client';
 import { Bls } from 'src/bls';
 import { AuthService } from 'src/auth/auth.service';
+
+const stream = new Stream(h('ff02ffff01ff02ff02ffff04ff02ffff04ff05ff80808080ffff04ffff01ff02ffff03ffff07ff0580ffff01ff0bffff0102ffff02ff02ffff04ff02ffff04ff09ff80808080ffff02ff02ffff04ff02ffff04ff0dff8080808080ffff01ff0bffff0101ff058080ff0180ff018080'));
+
+stream.seek = 0;
+
+const SHA256TREE =  sexp_from_stream(stream, to_sexp_f)
 
 @Injectable()
 export class TailService {
@@ -65,11 +71,18 @@ export class TailService {
         return eve_coin_parent.coin_record.coin.puzzle_hash;
     }
 
-    public async authorize(hash: string, request_signature: string): Promise<boolean> {
-        const auth_message = this.authService.getAuthorizationMessage();
+    public async authorize(hash: string, eveCoinId: string, request_signature: string): Promise<boolean> {
+        const auth_message = SExp.to("Chia Signed Message").cons(this.authService.getAuthorizationMessage());
+
+        const [, hash_result] = run_program(
+            SHA256TREE,
+            SExp.to([auth_message]),
+            OPERATOR_LOOKUP,
+        );
+        const message = hash_result.atom.hex();
+
         const signature = this.bls.signatureFromHex(request_signature);
-        const tail = await this.tail.get(hash);
-        const eve_coin = await this.coin.get_coin_record_by_name(tail.eveCoinId);
+        const eve_coin = await this.coin.get_coin_record_by_name(eveCoinId);
 
         // Puzzle and solution of the parent of eve coin
         const { coin_solution } = await this.coin.get_puzzle_and_solution(eve_coin.coin_record.coin.parent_coin_info, eve_coin.coin_record.confirmed_block_index);
@@ -89,7 +102,7 @@ export class TailService {
                 const synthetic_pk = this.bls.getPublicKey(synthetic_pk_hex);
 
                 // Verify signature against key of parent of eve
-                return this.bls.verify(synthetic_pk, auth_message, signature)
+                return this.bls.verify(synthetic_pk, message, signature)
             }
         }
 
