@@ -59,9 +59,6 @@ export class TailController {
       throw new BadRequestException('Signature is required');
     }
 
-    // Eve coin must be of the correct CAT
-    this.validateTailHash(updateTailDto.hash, updateTailDto.eveCoinId);
-
     const valid = await this.tailService.authorize(updateTailDto.hash, updateTailDto.eveCoinId, signature);
 
     if (!valid) {
@@ -104,22 +101,12 @@ export class TailController {
     }
 
     // Eve coin must be of the correct CAT
-    const eve_coin_id = this.validateTailHash(tailRecord.hash, tailRecord.eveCoinId);
+    const eve_coin_id = this.tailService.validateTailHash(tailRecord.hash, tailRecord.eveCoinId);
 
     const nftUri = await this.nftService.getNftUri(tailRecord.launcherId);
 
     if (!nftUri) {
       throw new BadRequestException('Launcher ID does not resolve to an NFT URI');
-    }
-
-    return eve_coin_id;
-  }
-
-  private async validateTailHash(hash, eveCoinId) {
-    const [eve_coin_id, _, tail_hash] = await this.tailService.getTailReveal(eveCoinId);
-
-    if (tail_hash !== hash) {
-      throw new BadRequestException(`eveCoinId is not for correct CAT. Expected TAIL hash of ${hash} but found ${tail_hash}`);
     }
 
     return eve_coin_id;

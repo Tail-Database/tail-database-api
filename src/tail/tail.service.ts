@@ -21,7 +21,7 @@ const stream = new Stream(h('ff02ffff01ff02ff02ffff04ff02ffff04ff05ff80808080fff
 
 stream.seek = 0;
 
-const SHA256TREE =  sexp_from_stream(stream, to_sexp_f)
+const SHA256TREE = sexp_from_stream(stream, to_sexp_f)
 
 @Injectable()
 export class TailService {
@@ -72,6 +72,9 @@ export class TailService {
     }
 
     public async authorize(hash: string, eveCoinId: string, request_signature: string): Promise<boolean> {
+        // Eve coin must be of the correct CAT
+        this.validateTailHash(hash, eveCoinId);
+
         const auth_message = SExp.to("Chia Signed Message").cons(this.authService.getAuthorizationMessage());
 
         const [, hash_result] = run_program(
@@ -186,5 +189,15 @@ export class TailService {
 
             current_coin = parent_coin_info;
         }
+    }
+
+    public async validateTailHash(hash, eveCoinId) {
+        const [eve_coin_id, _, tail_hash] = await this.getTailReveal(eveCoinId);
+
+        if (tail_hash !== hash) {
+            throw new BadRequestException(`eveCoinId is not for correct CAT. Expected TAIL hash of ${hash} but found ${tail_hash}`);
+        }
+
+        return eve_coin_id;
     }
 }
