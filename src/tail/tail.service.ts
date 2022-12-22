@@ -88,33 +88,37 @@ export class TailService {
         );
         const message = hash_result.atom.hex();
 
-        const signature = this.bls.signatureFromHex(request_signature);
-        const eve_coin = await this.coin.get_coin_record_by_name(eveCoinId);
+        try {
+            const signature = this.bls.signatureFromHex(request_signature);
+            const eve_coin = await this.coin.get_coin_record_by_name(eveCoinId);
 
-        // Puzzle and solution of the parent of eve coin
-        const { coin_solution } = await this.coin.get_puzzle_and_solution(eve_coin.coin_record.coin.parent_coin_info, eve_coin.coin_record.confirmed_block_index);
+            // Puzzle and solution of the parent of eve coin
+            const { coin_solution } = await this.coin.get_puzzle_and_solution(eve_coin.coin_record.coin.parent_coin_info, eve_coin.coin_record.confirmed_block_index);
 
-        const [, result] = run_program(
-            hex_to_program(coin_solution.puzzle_reveal),
-            hex_to_program(coin_solution.solution),
-            OPERATOR_LOOKUP,
-        );
+            const [, result] = run_program(
+                hex_to_program(coin_solution.puzzle_reveal),
+                hex_to_program(coin_solution.solution),
+                OPERATOR_LOOKUP,
+            );
 
-        for (const data of result.as_iter()) {
-            const opcode = (data as SExp).first();
+            for (const data of result.as_iter()) {
+                const opcode = (data as SExp).first();
 
-            if (opcode.as_int() == AGG_SIG_ME) {
-                const synthetic_pk_sexp: SExp = data.rest().first();
-                const synthetic_pk_hex = synthetic_pk_sexp.atom.hex();
-                const synthetic_pk = this.bls.getPublicKey(synthetic_pk_hex);
+                if (opcode.as_int() == AGG_SIG_ME) {
+                    const synthetic_pk_sexp: SExp = data.rest().first();
+                    const synthetic_pk_hex = synthetic_pk_sexp.atom.hex();
+                    const synthetic_pk = this.bls.getPublicKey(synthetic_pk_hex);
 
-                // Verify signature against key of parent of eve
-                const valid = this.bls.verify(synthetic_pk, message, signature);
+                    // Verify signature against key of parent of eve
+                    const valid = this.bls.verify(synthetic_pk, message, signature);
 
-                if (valid) {
-                    return;
+                    if (valid) {
+                        return;
+                    }
                 }
             }
+        } catch (err) {
+            console.error(err);
         }
 
         throw new BadRequestException('Invalid signature');
