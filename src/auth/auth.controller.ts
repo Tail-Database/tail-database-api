@@ -1,4 +1,4 @@
-import { Body, Controller, Logger, Param, Post } from '@nestjs/common';
+import { BadRequestException, Body, Controller, Logger, Param, Post } from '@nestjs/common';
 import { convertbits, encode } from 'src/bech32';
 import { TailService } from '../tail/tail.service';
 import { AuthDto } from './auth.dto';
@@ -17,7 +17,13 @@ export class AuthController {
   async getMessage(@Param('hash') hash: string, @Body() authDto: AuthDto): Promise<{ address: string; message: string; }> {
     this.logger.log('POST /auth called');
 
-    await this.tailService.validateTailHash(hash, authDto.coinId);
+    try {
+      await this.tailService.validateTailHash(hash, authDto.coinId);
+    } catch (err) {
+      console.error(err);
+
+      throw new BadRequestException('Coin ID does not match Asset ID');
+    }
 
     const message = this.authService.getAuthorizationMessage();
     const [eve_coin_id] = await this.tailService.getTailReveal(authDto.coinId);
