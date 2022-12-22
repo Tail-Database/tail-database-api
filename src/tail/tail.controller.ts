@@ -39,7 +39,7 @@ export class TailController {
   async addTail(@Headers() headers, @Body() addTailDto: AddTailDto): Promise<InsertResponse> {
     this.logger.log('POST /tail called');
 
-    // await this.tailService.authorize(addTailDto.hash, addTailDto.eveCoinId, headers['x-chia-signature']);
+    await this.tailService.authorize(addTailDto.hash, addTailDto.eveCoinId, headers['x-chia-signature']);
 
     const eveCoinId = await this.validateTailRecord(addTailDto);
 
