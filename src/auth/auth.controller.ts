@@ -15,7 +15,7 @@ export class AuthController {
 
   @Post(':hash')
   async getMessage(@Param('hash') hash: string, @Body() authDto: AuthDto): Promise<{ address: string; message: string; }> {
-    this.logger.log('GET /auth called');
+    this.logger.log('POST /auth called');
 
     await this.tailService.validateTailHash(hash, authDto.coinId);
 
