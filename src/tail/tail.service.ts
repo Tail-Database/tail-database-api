@@ -39,6 +39,10 @@ export class TailService {
         return this.tail.insert(tailRecord);
     }
 
+    async updateTail(tailRecord: TailRecord): Promise<InsertResponse> {
+        return this.tail.update(tailRecord);
+    }
+
     async addTails(tailRecords: TailRecord[]): Promise<InsertResponse> {
         const hashes = new Map<string, boolean>();
         const codes = new Map<string, boolean>();

@@ -52,12 +52,16 @@ export class TailController {
   }
 
   @Patch()
-  async updateTail(@Headers() headers, @Body() updateTailDto: AddTailDto): Promise<void> {
+  async updateTail(@Headers() headers, @Body() updateTailDto: AddTailDto): Promise<InsertResponse> {
     this.logger.log('PATCH /tail called');
 
     await this.tailService.authorize(updateTailDto.hash, updateTailDto.eveCoinId, headers['x-chia-signature']);
 
-    // Todo: perform update
+    await this.validateTailRecord(updateTailDto);
+
+    this.logger.log('Validation passed');
+
+    return this.tailService.updateTail(updateTailDto);
   }
 
   @Post('/batch/insert')
