@@ -12,5 +12,6 @@ const CONFIG_PATH = `${chiaRootPath}/config/ssl/full_node`;
 export const connectionOptions = {
     cert: readFileSync(`${CONFIG_PATH}/private_full_node.crt`),
     key: readFileSync(`${CONFIG_PATH}/private_full_node.key`),
-    rejectUnauthorized: false
+    rejectUnauthorized: false,
+    hostname: process.env.HOSTNAME
 };
