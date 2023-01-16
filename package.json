@@ -12,7 +12,7 @@
     "start": "nest start",
     "start:dev": "nest start --watch",
     "start:debug": "nest start --debug --watch",
-    "start:prod": "HOSTNAME=185.218.124.174 pm2 start dist/main.js",
+    "start:prod": "HOSTNAME=185.218.124.174 pm2 start dist/main.js --update-env",
     "stop:prod": "pm2 stop dist/main.js",
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
     "test": "jest",
