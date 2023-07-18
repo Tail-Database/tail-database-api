@@ -1,4 +1,4 @@
-import { BadRequestException, Body, Controller, Get, Headers, Param, Post, Logger, Patch } from '@nestjs/common';
+import { BadRequestException, Body, Controller, Get, Headers, Param, Post, Logger, Patch, NotFoundException } from '@nestjs/common';
 import { InsertResponse, TailRecord, validateTailRecord } from '@tail-database/tail-database-client';
 import { AddTailDto } from './add.tail.dto';
 import { AddTailsDto } from './add.tails.dto';
@@ -32,7 +32,13 @@ export class TailController {
   async getTail(@Param('hash') hash: string): Promise<TailRecord> {
     this.logger.log(`GET /tail/${hash} called`);
 
-    return this.tailService.getTail(hash);
+    const tail = await this.tailService.getTail(hash);
+
+    if (!tail) {
+      throw new NotFoundException(`TAIL not found: ${hash}`);
+    }
+
+    return tail;
   }
 
   @Post()
